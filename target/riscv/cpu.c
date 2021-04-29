@@ -202,6 +202,16 @@ static void rv64imacu_nommu_cpu_init(Object *obj)
     set_feature(env, RISCV_FEATURE_PMP);
 }
 
+static void rv64gcsu_n_cpu_init(Object *obj)
+{
+    CPURISCVState *env = &RISCV_CPU(obj)->env;
+    set_misa(env, RV64 | RVI | RVM | RVA | RVF | RVD | RVC | RVS | RVU | RVN);
+    set_priv_version(env, PRIV_VERSION_1_10_0);
+    set_resetvec(env, DEFAULT_RSTVEC);
+    set_feature(env, RISCV_FEATURE_MMU);
+    set_feature(env, RISCV_FEATURE_PMP);
+}
+
 #endif
 
 static ObjectClass *riscv_cpu_class_by_name(const char *cpu_model)
@@ -254,6 +264,10 @@ static void riscv_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     if (riscv_has_ext(env, RVH)) {
         qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "hedeleg ", env->hedeleg);
     }
+    if (riscv_has_ext(env, RVN)) {
+        qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "sideleg ", env->sideleg);
+        qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "sedeleg ", env->sedeleg);
+    }
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "mtvec   ", env->mtvec);
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "stvec   ", env->stvec);
     if (riscv_has_ext(env, RVH)) {
@@ -264,10 +278,16 @@ static void riscv_cpu_dump_state(CPUState *cs, FILE *f, int flags)
     if (riscv_has_ext(env, RVH)) {
         qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "vsepc   ", env->vsepc);
     }
+    if (riscv_has_ext(env, RVN)) {
+        qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "uepc   ", env->uepc);
+    }
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "mcause  ", env->mcause);
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "scause  ", env->scause);
     if (riscv_has_ext(env, RVH)) {
         qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "vscause ", env->vscause);
+    }
+    if (riscv_has_ext(env, RVN)) {
+        qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "ucause  ", env->ucause);
     }
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "mtval ", env->mtval);
     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "stval ", env->sbadaddr);
@@ -275,6 +295,9 @@ static void riscv_cpu_dump_state(CPUState *cs, FILE *f, int flags)
         qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "htval ", env->htval);
         qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "mtval2 ", env->mtval2);
     }
+    // if (riscv_has_ext(env, RVN)) {
+    //     qemu_fprintf(f, " %s " TARGET_FMT_lx "\n", "utval ", env->utval);
+    // }
 #endif
 
     for (i = 0; i < 32; i++) {
@@ -457,6 +480,9 @@ static void riscv_cpu_realize(DeviceState *dev, Error **errp)
         if (cpu->cfg.ext_h) {
             target_misa |= RVH;
         }
+        if (cpu->cfg.ext_n) {
+            target_misa |= RVN;
+        }
 
         set_misa(env, RVXLEN | target_misa);
     }
@@ -492,6 +518,7 @@ static Property riscv_cpu_properties[] = {
     DEFINE_PROP_BOOL("c", RISCVCPU, cfg.ext_c, true),
     DEFINE_PROP_BOOL("s", RISCVCPU, cfg.ext_s, true),
     DEFINE_PROP_BOOL("u", RISCVCPU, cfg.ext_u, true),
+    DEFINE_PROP_BOOL("n", RISCVCPU, cfg.ext_n, true),
     /* This is experimental so mark with 'x-' */
     DEFINE_PROP_BOOL("x-h", RISCVCPU, cfg.ext_h, false),
     DEFINE_PROP_BOOL("Counters", RISCVCPU, cfg.ext_counters, true),
@@ -622,7 +649,8 @@ static const TypeInfo riscv_cpu_type_infos[] = {
     /* Deprecated */
     DEFINE_CPU(TYPE_RISCV_CPU_RV64IMACU_NOMMU,  rv64imacu_nommu_cpu_init),
     DEFINE_CPU(TYPE_RISCV_CPU_RV64GCSU_V1_09_1, rv64gcsu_priv1_09_1_cpu_init),
-    DEFINE_CPU(TYPE_RISCV_CPU_RV64GCSU_V1_10_0, rv64gcsu_priv1_10_0_cpu_init)
+    DEFINE_CPU(TYPE_RISCV_CPU_RV64GCSU_V1_10_0, rv64gcsu_priv1_10_0_cpu_init),
+    DEFINE_CPU(TYPE_RISCV_CPU_RV64GCSU_N,       rv64gcsu_n_cpu_init)
 #endif
 };
 

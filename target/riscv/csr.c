@@ -98,6 +98,11 @@ static int smode(CPURISCVState *env, int csrno)
     return -!riscv_has_ext(env, RVS);
 }
 
+static int nmode(CPURISCVState *env, int csrno)
+{
+    return -!riscv_has_ext(env, RVN);
+}
+
 static int hmode(CPURISCVState *env, int csrno)
 {
     if (riscv_has_ext(env, RVS) &&
@@ -269,11 +274,12 @@ static int read_timeh(CPURISCVState *env, int csrno, target_ulong *val)
 #define M_MODE_INTERRUPTS  (MIP_MSIP | MIP_MTIP | MIP_MEIP)
 #define S_MODE_INTERRUPTS  (MIP_SSIP | MIP_STIP | MIP_SEIP)
 #define VS_MODE_INTERRUPTS (MIP_VSSIP | MIP_VSTIP | MIP_VSEIP)
+#define U_MODE_INTERRUPTS  (MIP_USIP | MIP_UTIP | MIP_UEIP)
 
 static const target_ulong delegable_ints = S_MODE_INTERRUPTS |
-                                           VS_MODE_INTERRUPTS;
+                                           VS_MODE_INTERRUPTS | U_MODE_INTERRUPTS;
 static const target_ulong all_ints = M_MODE_INTERRUPTS | S_MODE_INTERRUPTS |
-                                     VS_MODE_INTERRUPTS;
+                                     VS_MODE_INTERRUPTS | U_MODE_INTERRUPTS;
 static const target_ulong delegable_excps =
     (1ULL << (RISCV_EXCP_INST_ADDR_MIS)) |
     (1ULL << (RISCV_EXCP_INST_ACCESS_FAULT)) |
@@ -299,7 +305,9 @@ static const target_ulong sstatus_v1_9_mask = SSTATUS_SIE | SSTATUS_SPIE |
 static const target_ulong sstatus_v1_10_mask = SSTATUS_SIE | SSTATUS_SPIE |
     SSTATUS_UIE | SSTATUS_UPIE | SSTATUS_SPP | SSTATUS_FS | SSTATUS_XS |
     SSTATUS_SUM | SSTATUS_MXR | SSTATUS_SD;
+static const target_ulong ustatus_mask = USTATUS_UIE | USTATUS_UPIE;
 static const target_ulong sip_writable_mask = SIP_SSIP | MIP_USIP | MIP_UEIP;
+static const target_ulong uip_writable_mask = MIP_USIP | MIP_UEIP;
 static const target_ulong hip_writable_mask = MIP_VSSIP | MIP_VSTIP | MIP_VSEIP;
 static const target_ulong vsip_writable_mask = MIP_VSSIP;
 
@@ -850,6 +858,136 @@ static int write_satp(CPURISCVState *env, int csrno, target_ulong val)
     return 0;
 }
 
+/* N Extensions */
+static int read_ustatus(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mstatus & ustatus_mask;
+    return 0;
+}
+
+static int write_ustatus(CPURISCVState *env, int csrno, target_ulong val)
+{
+    target_ulong newval = (env->mstatus & ~ustatus_mask) | (val & ustatus_mask);
+    return write_mstatus(env, CSR_MSTATUS, newval);
+}
+
+static int read_uie(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->mie & env->mideleg & env->sideleg;
+    return 0;
+}
+
+static int write_uie(CPURISCVState *env, int csrno, target_ulong val)
+{
+    target_ulong newval;
+
+    newval = (env->mie & ~U_MODE_INTERRUPTS) | (val & U_MODE_INTERRUPTS);
+
+    return write_mie(env, CSR_MIE, newval);
+}
+
+static int read_utvec(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->utvec;
+    return 0;
+}
+
+static int write_utvec(CPURISCVState *env, int csrno, target_ulong val)
+{
+    // COPY stvec
+    /* bits [1:0] encode mode; 0 = direct, 1 = vectored, 2 >= reserved */
+    if ((val & 3) < 2) {
+        env->utvec = val;
+    } else {
+        qemu_log_mask(LOG_UNIMP, "CSR_STVEC: reserved mode not supported\n");
+    }
+    return 0;
+}
+
+static int read_uscratch(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->uscratch;
+    return 0;
+}
+
+static int write_uscratch(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->uscratch = val;
+    return 0;
+}
+
+static int read_uepc(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->uepc;
+    return 0;
+}
+
+static int write_uepc(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->uepc = val;
+    return 0;
+}
+
+static int read_ucause(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->ucause;
+    return 0;
+}
+
+static int write_ucause(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->ucause = val;
+    return 0;
+}
+
+static int rmw_uip(CPURISCVState *env, int csrno, target_ulong *ret_value,
+                   target_ulong new_value, target_ulong write_mask)
+{
+    int ret;
+
+    ret = rmw_mip(env, CSR_MSTATUS, ret_value, new_value,
+                  write_mask & env->sideleg & uip_writable_mask);
+
+    *ret_value &= env->sideleg;
+    return ret;
+}
+
+static int read_utval(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->utval;
+    return 0;
+}
+
+static int write_utval(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->utval = val;
+    return 0;
+}
+
+static int read_sedeleg(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->sedeleg;
+    return 0;
+}
+
+static int write_sedeleg(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->sedeleg = val;
+    return 0;
+}
+
+static int read_sideleg(CPURISCVState *env, int csrno, target_ulong *val)
+{
+    *val = env->sideleg;
+    return 0;
+}
+
+static int write_sideleg(CPURISCVState *env, int csrno, target_ulong val)
+{
+    env->sideleg = val;
+    return 0;
+}
+
 /* Hypervisor Extensions */
 static int read_hstatus(CPURISCVState *env, int csrno, target_ulong *val)
 {
@@ -1339,6 +1477,18 @@ static riscv_csr_operations csr_ops[CSR_TABLE_SIZE] = {
 
     /* Supervisor Protection and Translation */
     [CSR_SATP] =                { smode, read_satp,        write_satp        },
+
+    /* User Trap | N Extension */
+    [CSR_USTATUS] =             { nmode, read_ustatus,      write_ustatus    },
+    [CSR_UIE] =                 { nmode, read_uie,          write_uie        },
+    [CSR_UTVEC] =               { nmode, read_utvec,        write_utvec      },
+    [CSR_USCRATCH] =            { nmode, read_uscratch,     write_uscratch   },
+    [CSR_UEPC] =                { nmode, read_uepc,         write_uepc       },
+    [CSR_UCAUSE] =              { nmode, read_ucause,       write_ucause     },
+    [CSR_UIP] =                 { nmode, NULL, NULL,        rmw_uip          },
+    [CSR_UTVAL] =               { nmode, read_utval,        write_utval      },
+    [CSR_SIDELEG] =             { nmode, read_sideleg,      write_sideleg    },
+    [CSR_SEDELEG] =             { nmode, read_sedeleg,      write_sedeleg    },
 
     [CSR_HSTATUS] =             { hmode,   read_hstatus,     write_hstatus    },
     [CSR_HEDELEG] =             { hmode,   read_hedeleg,     write_hedeleg    },

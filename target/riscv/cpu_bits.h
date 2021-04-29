@@ -421,6 +421,10 @@
 #define SSTATUS_SD SSTATUS64_SD
 #endif
 
+/* ustatus CSR bits */
+#define USTATUS_UIE         0x00000001
+#define USTATUS_UPIE        0x00000010
+
 /* hstatus CSR bits */
 #define HSTATUS_SPRV         0x00000001
 #define HSTATUS_SPV          0x00000080

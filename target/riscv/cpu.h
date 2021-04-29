@@ -46,6 +46,7 @@
 #define TYPE_RISCV_CPU_RV64IMACU_NOMMU  RISCV_CPU_TYPE_NAME("rv64imacu-nommu")
 #define TYPE_RISCV_CPU_RV64GCSU_V1_09_1 RISCV_CPU_TYPE_NAME("rv64gcsu-v1.9.1")
 #define TYPE_RISCV_CPU_RV64GCSU_V1_10_0 RISCV_CPU_TYPE_NAME("rv64gcsu-v1.10.0")
+#define TYPE_RISCV_CPU_RV64GCSU_N       RISCV_CPU_TYPE_NAME("rv64gcsu-n")
 
 #define RV32 ((target_ulong)1 << (TARGET_LONG_BITS - 2))
 #define RV64 ((target_ulong)2 << (TARGET_LONG_BITS - 2))
@@ -68,6 +69,7 @@
 #define RVS RV('S')
 #define RVU RV('U')
 #define RVH RV('H')
+#define RVN RV('N')
 
 /* S extension denotes that Supervisor mode exists, however it is possible
    to have a core that support S mode but does not have an MMU and there
@@ -169,6 +171,20 @@ struct CPURISCVState {
     target_ulong vscause;
     target_ulong vstval;
     target_ulong vsatp;
+
+    /* User CSRs */
+    // ustatus: subset of sstatus
+    // uie: subset of sie
+    // uip: subset of uip
+    target_ulong utvec;
+    target_ulong uscratch;
+    target_ulong uepc;
+    target_ulong ucause;
+    target_ulong utval;
+
+    target_ulong sedeleg;
+    target_ulong sideleg;
+
 #ifdef TARGET_RISCV32
     target_ulong vsstatush;
 #endif
@@ -263,6 +279,7 @@ typedef struct RISCVCPU {
         bool ext_s;
         bool ext_u;
         bool ext_h;
+        bool ext_n;
         bool ext_counters;
         bool ext_ifencei;
         bool ext_icsr;
