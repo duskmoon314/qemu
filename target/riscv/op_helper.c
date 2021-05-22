@@ -71,6 +71,22 @@ target_ulong helper_csrrc(CPURISCVState *env, target_ulong src,
 
 #ifndef CONFIG_USER_ONLY
 
+target_ulong helper_uret(CPURISCVState *env, target_ulong cpu_pc_deb)
+{
+    target_ulong retpc = env->uepc;
+    if (!riscv_has_ext(env, RVC) && (retpc & 0x3)) {
+        riscv_raise_exception(env, RISCV_EXCP_INST_ADDR_MIS, GETPC());
+    }
+
+    target_ulong mstatus = env->mstatus;
+    mstatus = set_field(mstatus, USTATUS_UIE, get_field(mstatus, USTATUS_UPIE));
+    mstatus = set_field(mstatus, USTATUS_UPIE, 1);
+    env->mstatus = mstatus;
+    riscv_cpu_set_mode(env, PRV_U);
+
+    return retpc;
+}
+
 target_ulong helper_sret(CPURISCVState *env, target_ulong cpu_pc_deb)
 {
     target_ulong prev_priv, prev_virt, mstatus;
