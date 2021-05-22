@@ -858,7 +858,7 @@ void riscv_cpu_do_interrupt(CPUState *cs)
     bool async = !!(cs->exception_index & RISCV_EXCP_INT_FLAG);
     target_ulong cause = cs->exception_index & RISCV_EXCP_INT_MASK;
     target_ulong deleg = async ? env->mideleg : env->medeleg;
-    target_ulong sdeleg = riscv_has_ext(env, RVN) ?
+    target_ulong sdeleg = deleg & riscv_has_ext(env, RVN) ?
         (async ? env->sideleg : env->sedeleg) :
         0;
     target_ulong tval = 0;
@@ -921,6 +921,8 @@ void riscv_cpu_do_interrupt(CPUState *cs)
             env->utval = tval;
             env->pc = (env->utvec >> 2 << 2) +
                 ((async && (env->utvec & 3) == 1) ? cause * 4 : 0);
+
+            riscv_cpu_set_mode(env, PRV_U);
     } else if (env->priv <= PRV_S &&
             cause < TARGET_LONG_BITS && ((deleg >> cause) & 1)) {
         /* handle the trap in S-mode */

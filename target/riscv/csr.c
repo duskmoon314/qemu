@@ -382,7 +382,7 @@ static int write_mstatus(CPURISCVState *env, int csrno, target_ulong val)
                 MSTATUS_MPRV | MSTATUS_SUM)) {
             tlb_flush(env_cpu(env));
         }
-        mask = MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_MIE | MSTATUS_MPIE |
+        mask = MSTATUS_UIE | MSTATUS_UPIE | MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_MIE | MSTATUS_MPIE |
             MSTATUS_SPP | MSTATUS_FS | MSTATUS_MPRV | MSTATUS_SUM |
             MSTATUS_MPP | MSTATUS_MXR | MSTATUS_TVM | MSTATUS_TSR |
             MSTATUS_TW;
@@ -705,7 +705,7 @@ static int write_sie(CPURISCVState *env, int csrno, target_ulong val)
         newval = (env->mie & ~VS_MODE_INTERRUPTS) |
                  ((val << 1) & VS_MODE_INTERRUPTS);
     } else {
-        newval = (env->mie & ~S_MODE_INTERRUPTS) | (val & S_MODE_INTERRUPTS);
+        newval = (env->mie & ~S_MODE_INTERRUPTS) | (val & (S_MODE_INTERRUPTS | U_MODE_INTERRUPTS));
     }
 
     return write_mie(env, CSR_MIE, newval);
@@ -946,9 +946,9 @@ static int rmw_uip(CPURISCVState *env, int csrno, target_ulong *ret_value,
     int ret;
 
     ret = rmw_mip(env, CSR_MSTATUS, ret_value, new_value,
-                  write_mask & env->sideleg & uip_writable_mask);
+                  write_mask & env->mideleg & env->sideleg & uip_writable_mask);
 
-    *ret_value &= env->sideleg;
+    *ret_value &= env->mideleg & env->sideleg;
     return ret;
 }
 
