@@ -70,7 +70,7 @@ static int riscv_cpu_local_irq_pending(CPURISCVState *env)
 
     irqs = (pending & ~env->mideleg & -mie) |
         (pending & env->mideleg & ~env->sideleg & -sie) |
-        (pending & env->mideleg & env->sideleg & -uie);
+        (pending & env->sideleg & -uie);
 
     if (irqs) {
         return ctz64(irqs); /* since non-zero */
@@ -858,9 +858,7 @@ void riscv_cpu_do_interrupt(CPUState *cs)
     bool async = !!(cs->exception_index & RISCV_EXCP_INT_FLAG);
     target_ulong cause = cs->exception_index & RISCV_EXCP_INT_MASK;
     target_ulong deleg = async ? env->mideleg : env->medeleg;
-    target_ulong sdeleg = deleg & riscv_has_ext(env, RVN) ?
-        (async ? env->sideleg : env->sedeleg) :
-        0;
+    target_ulong sdeleg = async ? env->sideleg : env->sedeleg;
     target_ulong tval = 0;
     target_ulong htval = 0;
     target_ulong mtval2 = 0;
@@ -915,6 +913,8 @@ void riscv_cpu_do_interrupt(CPUState *cs)
             s = env->mstatus;
             s = set_field(s, MSTATUS_UPIE, get_field(s, MSTATUS_UIE));
             s = set_field(s, MSTATUS_UIE, 0);
+            env->mstatus = s;
+
             env->ucause = cause |
                 ((target_ulong)async << (TARGET_LONG_BITS - 1));
             env->uepc = env->pc;

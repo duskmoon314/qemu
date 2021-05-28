@@ -873,7 +873,7 @@ static int write_ustatus(CPURISCVState *env, int csrno, target_ulong val)
 
 static int read_uie(CPURISCVState *env, int csrno, target_ulong *val)
 {
-    *val = env->mie & env->mideleg & env->sideleg;
+    *val = env->mie & env->sideleg;
     return 0;
 }
 
@@ -946,9 +946,9 @@ static int rmw_uip(CPURISCVState *env, int csrno, target_ulong *ret_value,
     int ret;
 
     ret = rmw_mip(env, CSR_MSTATUS, ret_value, new_value,
-                  write_mask & env->mideleg & env->sideleg & uip_writable_mask);
+                  write_mask & env->sideleg & uip_writable_mask);
 
-    *ret_value &= env->mideleg & env->sideleg;
+    *ret_value &= env->sideleg;
     return ret;
 }
 
@@ -972,7 +972,7 @@ static int read_sedeleg(CPURISCVState *env, int csrno, target_ulong *val)
 
 static int write_sedeleg(CPURISCVState *env, int csrno, target_ulong val)
 {
-    env->sedeleg = val;
+    env->sedeleg = val & env->medeleg;
     return 0;
 }
 
@@ -984,7 +984,7 @@ static int read_sideleg(CPURISCVState *env, int csrno, target_ulong *val)
 
 static int write_sideleg(CPURISCVState *env, int csrno, target_ulong val)
 {
-    env->sideleg = val;
+    env->sideleg = val & env->mideleg;
     return 0;
 }
 
