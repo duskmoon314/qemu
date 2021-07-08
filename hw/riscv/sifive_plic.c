@@ -152,6 +152,9 @@ static void sifive_plic_update(SiFivePLICState *plic)
         case PLICMode_S:
             riscv_cpu_update_mip(RISCV_CPU(cpu), MIP_SEIP, BOOL_TO_MASK(level));
             break;
+        case PLICMode_U:
+            riscv_cpu_update_mip(RISCV_CPU(cpu), MIP_UEIP, BOOL_TO_MASK(level));
+            break;
         default:
             break;
         }
