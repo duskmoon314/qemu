@@ -399,7 +399,7 @@ static void create_fdt(RISCVVirtState *s, const struct MemmapEntry *memmap,
     qemu_fdt_setprop_cell(fdt, nodename, "interrupt-parent", plic_phandle);
     qemu_fdt_setprop_cell(fdt, nodename, "interrupts", UART0_IRQ);
 
-    nodename = g_strdup_printf("/uart1@%lx",
+    nodename = g_strdup_printf("/uart@%lx",
         (long)memmap[VIRT_UART1].base);
     qemu_fdt_add_subnode(fdt, nodename);
     qemu_fdt_setprop_string(fdt, nodename, "compatible", "ns16550a");
