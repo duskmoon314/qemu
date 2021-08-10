@@ -49,6 +49,7 @@ enum {
     VIRT_PLIC,
     VIRT_UART0,
     VIRT_UART1,
+    VIRT_UART2,
     VIRT_VIRTIO,
     VIRT_FLASH,
     VIRT_DRAM,
@@ -60,6 +61,7 @@ enum {
 enum {
     UART1_IRQ = 9,
     UART0_IRQ = 10,
+    UART2_IRQ = 12,
     RTC_IRQ = 11,
     VIRTIO_IRQ = 1, /* 1 to 8 */
     VIRTIO_COUNT = 8,

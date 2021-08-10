@@ -881,7 +881,7 @@ static int write_uie(CPURISCVState *env, int csrno, target_ulong val)
 {
     target_ulong newval;
 
-    newval = (env->mie & ~U_MODE_INTERRUPTS) | (val & U_MODE_INTERRUPTS);
+    newval = (env->mie & ~U_MODE_INTERRUPTS) | (val & env->sideleg);
 
     return write_mie(env, CSR_MIE, newval);
 }

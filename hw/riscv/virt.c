@@ -63,6 +63,7 @@ static const struct MemmapEntry {
     [VIRT_PLIC] =        {  0xc000000,     0x4000000 },
     [VIRT_UART0] =       { 0x10000000,         0x100 },
     [VIRT_UART1] =       { 0x10000100,         0x100 },
+    [VIRT_UART2] =       { 0x10000200,         0x100 },
     [VIRT_VIRTIO] =      { 0x10001000,        0x1000 },
     [VIRT_FLASH] =       { 0x20000000,     0x4000000 },
     [VIRT_DRAM] =        { 0x80000000,           0x0 },
@@ -410,6 +411,17 @@ static void create_fdt(RISCVVirtState *s, const struct MemmapEntry *memmap,
     qemu_fdt_setprop_cell(fdt, nodename, "interrupt-parent", plic_phandle);
     qemu_fdt_setprop_cell(fdt, nodename, "interrupts", UART1_IRQ);
 
+    nodename = g_strdup_printf("/uart@%lx",
+        (long)memmap[VIRT_UART2].base);
+    qemu_fdt_add_subnode(fdt, nodename);
+    qemu_fdt_setprop_string(fdt, nodename, "compatible", "ns16550a");
+    qemu_fdt_setprop_cells(fdt, nodename, "reg",
+        0x0, memmap[VIRT_UART2].base,
+        0x0, memmap[VIRT_UART2].size);
+    qemu_fdt_setprop_cell(fdt, nodename, "clock-frequency", 3686400);
+    qemu_fdt_setprop_cell(fdt, nodename, "interrupt-parent", plic_phandle);
+    qemu_fdt_setprop_cell(fdt, nodename, "interrupts", UART2_IRQ);
+
     qemu_fdt_add_subnode(fdt, "/chosen");
     qemu_fdt_setprop_string(fdt, "/chosen", "stdout-path", nodename);
     if (cmdline) {
@@ -629,6 +641,10 @@ static void riscv_virt_board_init(MachineState *machine)
     serial_mm_init(system_memory, memmap[VIRT_UART1].base,
         0, qdev_get_gpio_in(DEVICE(s->plic), UART1_IRQ), 399193,
         serial_hd(1), DEVICE_LITTLE_ENDIAN);
+
+    serial_mm_init(system_memory, memmap[VIRT_UART2].base,
+        0, qdev_get_gpio_in(DEVICE(s->plic), UART2_IRQ), 399193,
+        serial_hd(2), DEVICE_LITTLE_ENDIAN);
 
     sysbus_create_simple("goldfish_rtc", memmap[VIRT_RTC].base,
         qdev_get_gpio_in(DEVICE(s->plic), RTC_IRQ));
