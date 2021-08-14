@@ -50,6 +50,8 @@ enum {
     VIRT_UART0,
     VIRT_UART1,
     VIRT_UART2,
+    VIRT_UART3,
+    VIRT_UART4,
     VIRT_VIRTIO,
     VIRT_FLASH,
     VIRT_DRAM,
@@ -59,10 +61,12 @@ enum {
 };
 
 enum {
-    UART1_IRQ = 9,
     UART0_IRQ = 10,
-    UART2_IRQ = 12,
     RTC_IRQ = 11,
+    UART1_IRQ = 12,
+    UART2_IRQ = 13,
+    UART3_IRQ = 14,
+    UART4_IRQ = 15,
     VIRTIO_IRQ = 1, /* 1 to 8 */
     VIRTIO_COUNT = 8,
     PCIE_IRQ = 0x20, /* 32 to 35 */
