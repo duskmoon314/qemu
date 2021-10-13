@@ -66,6 +66,7 @@
 #define RVU RV('U')
 #define RVH RV('H')
 #define RVJ RV('J')
+#define RVN RV('N')
 
 /* S extension denotes that Supervisor mode exists, however it is possible
    to have a core that support S mode but does not have an MMU and there
@@ -177,6 +178,16 @@ struct CPURISCVState {
     target_ulong mepc;
     target_ulong mcause;
     target_ulong mtval;  /* since: priv-1.10.0 */
+
+    /* User CSRs */
+    target_ulong utvec;
+    target_ulong uepc;
+    target_ulong ucause;
+    target_ulong utval;
+    target_ulong uscratch;
+
+    target_ulong sedeleg;
+    target_ulong sideleg;
 
     /* Hypervisor CSRs */
     target_ulong hstatus;
@@ -305,6 +316,7 @@ struct RISCVCPU {
         bool ext_h;
         bool ext_j;
         bool ext_v;
+        bool ext_n;
         bool ext_zba;
         bool ext_zbb;
         bool ext_zbc;

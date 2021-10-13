@@ -416,6 +416,10 @@ typedef enum {
 #define SSTATUS32_SD        0x80000000
 #define SSTATUS64_SD        0x8000000000000000ULL
 
+/* ustatus CSR bits */
+#define USTATUS_UIE         0x00000001
+#define USTATUS_UPIE        0x00000010
+
 /* hstatus CSR bits */
 #define HSTATUS_VSBE         0x00000020
 #define HSTATUS_GVA          0x00000040
