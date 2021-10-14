@@ -75,6 +75,7 @@ struct SiFivePLICState {
 
     qemu_irq *m_external_irqs;
     qemu_irq *s_external_irqs;
+    qemu_irq *u_external_irqs;
 };
 
 DeviceState *sifive_plic_create(hwaddr addr, char *hart_config,

@@ -149,6 +149,9 @@ static void sifive_plic_update(SiFivePLICState *plic)
         case PLICMode_S:
             qemu_set_irq(plic->s_external_irqs[hartid - plic->hartid_base], level);
             break;
+        case PLICMode_U:
+            qemu_set_irq(plic->u_external_irqs[hartid - plic->hartid_base], level);
+            break;
         default:
             break;
         }
@@ -438,6 +441,9 @@ static void sifive_plic_realize(DeviceState *dev, Error **errp)
     s->enable = g_new0(uint32_t, s->num_enables);
 
     qdev_init_gpio_in(dev, sifive_plic_irq_request, s->num_sources);
+
+    s->u_external_irqs = g_malloc(sizeof(qemu_irq) * s->num_harts);
+    qdev_init_gpio_out(dev, s->u_external_irqs, s->num_harts);
 
     s->s_external_irqs = g_malloc(sizeof(qemu_irq) * s->num_harts);
     qdev_init_gpio_out(dev, s->s_external_irqs, s->num_harts);
