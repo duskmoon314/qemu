@@ -51,7 +51,9 @@ char *riscv_plic_hart_config_string(int hart_count)
         CPUState *cs = qemu_get_cpu(i);
         CPURISCVState *env = &RISCV_CPU(cs)->env;
 
-        if (riscv_has_ext(env, RVS)) {
+        if (riscv_has_ext(env, RVN)) {
+            vals[i] = "MSU";
+        } else if (riscv_has_ext(env, RVS)) {
             vals[i] = "MS";
         } else {
             vals[i] = "M";
