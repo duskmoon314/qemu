@@ -151,11 +151,15 @@ static int riscv_cpu_local_irq_pending(CPURISCVState *env)
     target_ulong vsie   = virt_enabled && sie;
     target_ulong uie    = env->priv == PRV_U && mstatus_uie;
 
+    /*
+     * TODO: Interaction between N and H extensions
+     * The next line only considers U mode but not VU mode.
+     */
     target_ulong irqs =
             (pending & ~env->mideleg & -mie) |
-            (pending &  env->mideleg & ~env->hideleg & -hsie) |
-            (pending &  env->mideleg &  env->hideleg & ~env->sideleg & -vsie) |
-            (pending &  env->mideleg &  env->hideleg &  env->sideleg & -uie);
+            (pending &  env->mideleg & ~env->hideleg & ~env->sideleg & -hsie) |
+            (pending &  env->mideleg & ~env->hideleg &  env->sideleg & -uie) |
+            (pending &  env->mideleg &  env->hideleg & -vsie);
 
     if (irqs) {
         return ctz64(irqs); /* since non-zero */
@@ -1041,8 +1045,11 @@ void riscv_cpu_do_interrupt(CPUState *cs)
                   __func__, env->mhartid, async, cause, env->pc, tval,
                   riscv_cpu_get_trap_name(cause, async));
 
+    /*
+     * TODO: Interaction between N and H extensions
+     */
     if (riscv_has_ext(env, RVN) && env->priv == PRV_U &&
-            cause < TARGET_LONG_BITS && ((sdeleg >> cause) & 1)) {
+            cause < TARGET_LONG_BITS && (((deleg & sdeleg) >> cause) & 1)) {
         s = env->mstatus;
         s = set_field(s, MSTATUS_UPIE, get_field(s, MSTATUS_UIE));
         s = set_field(s, MSTATUS_UIE, 0);

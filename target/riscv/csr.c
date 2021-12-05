@@ -545,7 +545,8 @@ static RISCVException write_mstatus(CPURISCVState *env, int csrno,
             MSTATUS_MPRV | MSTATUS_SUM)) {
         tlb_flush(env_cpu(env));
     }
-    mask = MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_MIE | MSTATUS_MPIE |
+    mask = MSTATUS_UIE | MSTATUS_UPIE |
+        MSTATUS_SIE | MSTATUS_SPIE | MSTATUS_MIE | MSTATUS_MPIE |
         MSTATUS_SPP | MSTATUS_FS | MSTATUS_MPRV | MSTATUS_SUM |
         MSTATUS_MPP | MSTATUS_MXR | MSTATUS_TVM | MSTATUS_TSR |
         MSTATUS_TW;
@@ -1105,7 +1106,7 @@ static RISCVException write_utvec(CPURISCVState *env, int csrno,
 {
     /* bits [1:0] encode mode; 0 = direct, 1 = vectored, 2 >= reserved */
     if ((val & 3) < 2) {
-        env->stvec = val;
+        env->utvec = val;
     } else {
         qemu_log_mask(LOG_UNIMP, "CSR_UTVEC: reserved mode not supported\n");
     }
@@ -1193,7 +1194,7 @@ static RISCVException read_sedeleg(CPURISCVState *env, int csrno,
 static RISCVException write_sedeleg(CPURISCVState *env, int csrno,
                                     target_ulong val)
 {
-    env->sedeleg = val &= env->medeleg;
+    env->sedeleg = val & env->medeleg;
     return RISCV_EXCP_NONE;
 }
 
