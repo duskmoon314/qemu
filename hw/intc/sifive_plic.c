@@ -560,8 +560,10 @@ DeviceState *sifive_plic_create(hwaddr addr, char *hart_config,
         CPUState *cpu = qemu_get_cpu(hartid_base + i);
 
         qdev_connect_gpio_out(dev, i,
-                              qdev_get_gpio_in(DEVICE(cpu), IRQ_S_EXT));
+                              qdev_get_gpio_in(DEVICE(cpu), IRQ_U_EXT));
         qdev_connect_gpio_out(dev, num_harts + i,
+                              qdev_get_gpio_in(DEVICE(cpu), IRQ_S_EXT));
+        qdev_connect_gpio_out(dev, num_harts * 2 + i,
                               qdev_get_gpio_in(DEVICE(cpu), IRQ_M_EXT));
     }
 
