@@ -35,6 +35,7 @@
 #include "hw/intc/riscv_aclint.h"
 #include "hw/intc/sifive_plic.h"
 #include "hw/misc/sifive_test.h"
+#include "hw/intc/uintc_mat.h"
 #include "chardev/char.h"
 #include "sysemu/device_tree.h"
 #include "sysemu/sysemu.h"
@@ -50,6 +51,7 @@ static const MemMapEntry virt_memmap[] = {
     [VIRT_CLINT] =       {  0x2000000,       0x10000 },
     [VIRT_ACLINT_SSWI] = {  0x2F00000,        0x4000 },
     [VIRT_PCIE_PIO] =    {  0x3000000,       0x10000 },
+    [VIRT_UINTC_MAT] =   {  0x4000000, UINTC_MAT_SIZE },
     [VIRT_PLIC] =        {  0xc000000, VIRT_PLIC_SIZE(VIRT_CPUS_MAX * 3) },
     [VIRT_UART0] =       { 0x10000000,         0x100 },
     [VIRT_VIRTIO] =      { 0x10001000,        0x1000 },
@@ -864,6 +866,13 @@ static void virt_machine_init(MachineState *machine)
                     i * memmap[VIRT_ACLINT_SSWI].size,
                 base_hartid, hart_count, true);
         }
+
+        uintc_mat_create(
+            memmap[VIRT_UINTC_MAT].base,
+            VIRT_UINTC_MAT_NUM_SOURCES,
+            VIRT_UINTC_MAT_NUM_DESTINATIONS,
+            base_hartid,
+            hart_count);
 
         /* Per-socket PLIC hart topology configuration string */
         plic_hart_config = riscv_plic_hart_config_string(hart_count);

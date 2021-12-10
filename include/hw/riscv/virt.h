@@ -54,6 +54,7 @@ enum {
     VIRT_CLINT,
     VIRT_ACLINT_SSWI,
     VIRT_PLIC,
+    VIRT_UINTC_MAT,
     VIRT_UART0,
     VIRT_UART1,
     VIRT_UART2,
@@ -98,5 +99,8 @@ enum {
 #define FDT_PLIC_INT_CELLS    1
 #define FDT_INT_MAP_WIDTH     (FDT_PCI_ADDR_CELLS + FDT_PCI_INT_CELLS + 1 + \
                                FDT_PLIC_ADDR_CELLS + FDT_PLIC_INT_CELLS)
+
+#define VIRT_UINTC_MAT_NUM_SOURCES 64
+#define VIRT_UINTC_MAT_NUM_DESTINATIONS 64
 
 #endif
