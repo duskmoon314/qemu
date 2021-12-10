@@ -68,6 +68,9 @@ config RISCV_ACLINT
 config SIFIVE_PLIC
     bool
 
+config UINTC_MAT
+    bool
+
 config GOLDFISH_PIC
     bool
 
