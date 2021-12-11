@@ -37,7 +37,7 @@ typedef struct UINTCMatState {
     uint32_t *receiver_uiid;
 
     /* Per context */
-    uint32_t *receiver;
+    uint32_t *listen;
     uint32_t *active_irq_count;
     qemu_irq *user_soft_irqs;
 } UINTCMatState;

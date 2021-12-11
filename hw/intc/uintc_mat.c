@@ -28,7 +28,7 @@ static void uintc_mat_print_state(UINTCMatState *uintc)
 
     qemu_log("contexts:  ");
     for (i = 0; i < uintc->num_contexts; i++) {
-        qemu_log("%u(%u) ", uintc->receiver[i], uintc->active_irq_count[i]);
+        qemu_log("%u(%u) ", uintc->listen[i], uintc->active_irq_count[i]);
     }
     qemu_log("\n");
 
@@ -67,7 +67,7 @@ static void uintc_mat_update(UINTCMatState *uintc)
     uint32_t i;
 
     for (i = 0; i < uintc->num_contexts; i++) {
-        bool level = uintc->active_irq_count[uintc->receiver[i]] > 0;
+        bool level = uintc->active_irq_count[uintc->listen[i]] > 0;
         if (level) {
             qemu_irq_raise(uintc->user_soft_irqs[uintc->hartid_base + i]);
         }
@@ -310,9 +310,9 @@ static uint64_t uintc_mat_read_impl(UINTCMatState *uintc, hwaddr addr,
     }
 
     if (within(addr, UINTC_MAT_CONTEXT_BASE, uintc->num_contexts << 2)) {
-        /* receiver */
+        /* listen */
         uint32_t context_id = (addr - UINTC_MAT_CONTEXT_BASE) >> 2;
-        return uintc->receiver[context_id];
+        return uintc->listen[context_id];
     } else if (within(addr, UINTC_MAT_SENDER_BASE, uintc->num_senders << 13)) {
         uint32_t sender_id = (addr - UINTC_MAT_SENDER_BASE) >> 13;
         hwaddr sender_offset = addr & 0x1FFF;
@@ -457,11 +457,11 @@ static void uintc_mat_write_impl(UINTCMatState *uintc, hwaddr addr,
     }
 
     if (within(addr, UINTC_MAT_CONTEXT_BASE, uintc->num_contexts << 2)) {
-        /* receiver */
+        /* listen */
         uint32_t context_id = (addr - UINTC_MAT_CONTEXT_BASE) >> 2;
 
         *need_update = true;
-        uintc->receiver[context_id] = value;
+        uintc->listen[context_id] = value;
     } else if (within(addr, UINTC_MAT_SENDER_BASE, uintc->num_senders << 13)) {
         uint32_t sender_id = (addr - UINTC_MAT_SENDER_BASE) >> 13;
         hwaddr sender_offset = addr & 0x1FFF;
@@ -630,7 +630,7 @@ static void uintc_mat_class_realize(DeviceState *dev, Error **errp)
 
     uintc->receiver_uiid = g_new0(uint32_t, uintc->num_receivers);
 
-    uintc->receiver = g_new0(uint32_t, uintc->num_contexts);
+    uintc->listen = g_new0(uint32_t, uintc->num_contexts);
     uintc->active_irq_count = g_new0(uint32_t, uintc->num_contexts);
 
     /*
