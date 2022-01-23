@@ -47,9 +47,9 @@ DeviceState *uintc_mat_create(hwaddr addr, uint32_t num_senders,
                               uint32_t num_contexts);
 
 enum {
-    UINTC_MAT_MAX_SENDERS = 4095,
-    UINTC_MAT_MAX_RECEIVERS = 4095,
-    UINTC_MAT_MAX_HARTS = 4095,
+    UINTC_MAT_MAX_SENDERS = 4096,
+    UINTC_MAT_MAX_RECEIVERS = 4096,
+    UINTC_MAT_MAX_CONTEXTS = 2048,
     UINTC_MAT_SIZE = 0x4000000,
     UINTC_MAT_SENDER_BASE = 0,
     UINTC_MAT_RECEIVER_BASE = 0x2000000,

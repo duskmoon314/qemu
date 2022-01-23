@@ -674,7 +674,7 @@ DeviceState *uintc_mat_create(hwaddr addr, uint32_t num_senders,
 
     assert(num_senders <= UINTC_MAT_MAX_SENDERS);
     assert(num_receivers <= UINTC_MAT_MAX_RECEIVERS);
-    assert(num_contexts <= UINTC_MAT_MAX_HARTS);
+    assert(num_contexts <= UINTC_MAT_MAX_CONTEXTS);
     assert(!(addr & 0x7));
 
     qdev_prop_set_uint32(dev, "num-senders", num_senders);
